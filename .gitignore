@@ -2,3 +2,5 @@ lottery_sales.db
 __pycache__/
 *.xlsx
 *tmp*
+*.json
+.env

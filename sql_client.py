@@ -43,7 +43,9 @@ class SqliteClient:
 
     def _require_connection(self) -> sqlite3.Connection:
         if self.connection is None:
-            raise RuntimeError("Database connection is not established. Call connect() or use context manager.")
+            raise RuntimeError(
+                "Database connection is not established. Call connect() or use context manager."
+            )
         return self.connection
 
     # --- generic helpers -------------------------------------------------
@@ -56,7 +58,9 @@ class SqliteClient:
             cursor.execute(query, params)
         return cursor
 
-    def executemany(self, query: str, seq_of_params: Iterable[Union[Dict[str, Any], Sequence[Any]]]) -> sqlite3.Cursor:
+    def executemany(
+        self, query: str, seq_of_params: Iterable[Union[Dict[str, Any], Sequence[Any]]]
+    ) -> sqlite3.Cursor:
         conn = self._require_connection()
         cursor = conn.cursor()
         cursor.executemany(query, seq_of_params)
@@ -113,9 +117,7 @@ class SqliteClient:
         Args:
             limit: Optional row limit.
         """
-        base_query = (
-            "SELECT id, date, firm, name, email, num_tickets FROM tickets ORDER BY date DESC"
-        )
+        base_query = "SELECT id, date, firm, name, email, num_tickets FROM tickets ORDER BY date DESC"
         params: Tuple[Any, ...] = tuple()
         if limit is not None:
             base_query += " LIMIT ?"
@@ -127,6 +129,28 @@ class SqliteClient:
         for row in cursor.fetchall():
             results.append({col: row[idx] for idx, col in enumerate(columns)})
         return results
+
+    # --- id assignment ---------------------------------------------------
+    def get_max_id_and_span(self) -> Tuple[Optional[int], Optional[int]]:
+        """Return (max_id, num_tickets_of_max_id_row).
+
+        If table is empty, returns (None, None).
+        """
+        cursor = self.execute(
+            "SELECT id, num_tickets FROM tickets WHERE id IS NOT NULL ORDER BY id DESC LIMIT 1"
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None, None
+        return int(row[0]), int(row[1])
+
+    def assign_id_for_row(self, row_date: str, row_name: str, new_id: int) -> None:
+        """Set the id for a row identified by unique key (name, date)."""
+        self.execute(
+            "UPDATE tickets SET id = :new_id WHERE name = :name AND date = :date",
+            {"new_id": new_id, "name": row_name, "date": row_date},
+        )
+        self._require_connection().commit()
 
     def remove_tickets(self, ticket_ids: Optional[Iterable[int]] = None) -> None:
         """Remove tickets from the database.

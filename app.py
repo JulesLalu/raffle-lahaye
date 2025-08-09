@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import io
-from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st
 
 from parse_jimdo import JimdoOrderParser
 from sql_client import SqliteClient
+from gmail_client import GmailEmailClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 DATABASE_PATH = "lottery_sales.db"
@@ -15,43 +18,9 @@ DEFAULT_ARTICLE = "Billet de tombola / Raffle ticket 2024"
 
 
 def ingest_uploaded_file(uploaded_file: io.BytesIO, article_name: str) -> int:
-    # Pandas can read from file-like object
     df = pd.read_excel(uploaded_file, skiprows=[0])
-    # Save to a temporary Excel in-memory buffer only for the existing parser API
-    # Instead, re-use parser logic directly on df to avoid disk IO
     parser = JimdoOrderParser(article_name=article_name)
-
-    # Reuse parser behavior by writing a small helper that emulates parse over df
-    # so we don't need to touch the class' public API.
-    def parse_df(df: pd.DataFrame) -> List[Dict[str, Any]]:
-        # Keep this in sync with JimdoOrderParser.parse_file logic
-        df_filtered = df[df["Article"] == article_name]
-        rows: List[Dict[str, Any]] = []
-        import re
-
-        for _, row in df_filtered.iterrows():
-            match = re.search(r"(\d+)", str(row.get("Déclinaison", "")))
-            if not match:
-                continue
-            num_tickets = int(match.group(1))
-
-            last_name = str(row.get("Nom pour facturation", "")).strip()
-            first_name = str(row.get("Prénom pour facturation", "")).strip()
-            name = f"{last_name} {first_name}".strip()
-
-            rows.append(
-                {
-                    "id": None,
-                    "date": pd.to_datetime(row.get("Date de commande")).strftime("%Y-%m-%d %H:%M:%S"),
-                    "firm": str(row.get("Entreprise pour facturation", "")).strip() or None,
-                    "name": name,
-                    "email": str(row.get("Email pour facturation", "")).strip(),
-                    "num_tickets": num_tickets,
-                }
-            )
-        return rows
-
-    ticket_rows = parse_df(df)
+    ticket_rows = parser.parse_dataframe(df)
 
     with SqliteClient(DATABASE_PATH) as db:
         db.create_tickets_table()
@@ -63,10 +32,16 @@ def main() -> None:
     st.set_page_config(page_title="Tombola Tickets", page_icon="🎟️", layout="wide")
     st.title("Tombola - Import and Browse Tickets")
 
+    # Flash messages persisted across reruns
+    if "flash_success" in st.session_state:
+        st.success(st.session_state.pop("flash_success"))
+    if "flash_error" in st.session_state:
+        st.error(st.session_state.pop("flash_error"))
+
     with st.sidebar:
         st.header("Import")
         article = DEFAULT_ARTICLE
-        uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx"]) 
+        uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx"])
         if uploaded is not None:
             if st.button("Ingest into database"):
                 try:
@@ -80,14 +55,64 @@ def main() -> None:
         db.create_tickets_table()
         rows = db.fetch_tickets()
 
-    if rows:
-        df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True)
-    else:
+    if not rows:
         st.info("No tickets in database yet. Upload an Excel file to get started.")
+        return
+
+    # Render table with action buttons per row
+    for idx, row in enumerate(rows):
+        cols = st.columns([2, 2, 3, 3, 2, 2, 2])
+        cols[0].markdown(f"**Date**\n\n{row['date']}")
+        cols[1].markdown(f"**Name**\n\n{row['name']}")
+        cols[2].markdown(f"**Email**\n\n{row['email']}")
+        cols[3].markdown(f"**Firm**\n\n{row.get('firm') or ''}")
+        cols[4].markdown(f"**Tickets**\n\n{row['num_tickets']}")
+        cols[5].markdown(
+            f"**ID**\n\n{row.get('id') if row.get('id') is not None else '-'}"
+        )
+
+        has_id = row.get("id") is not None
+        send_label = "Send email" if not has_id else "Resend"
+        if cols[6].button(send_label, key=f"send_{idx}"):
+            try:
+                email_client = GmailEmailClient()
+
+                # Determine starting ticket id
+                if has_id:
+                    start_id = int(row["id"])  # reuse existing id on resend
+                else:
+                    # Compute new id per rule: max(id) + num_tickets of max-id row
+                    with SqliteClient(DATABASE_PATH) as db:
+                        max_id, max_span = db.get_max_id_and_span()
+                        if max_id is None:
+                            start_id = 1
+                        else:
+                            start_id = max_id + (max_span or 0)
+
+                # Send email (use starting ticket id)
+                email_client.send_ticket_email(
+                    db_email=row["email"],
+                    name=row["name"],
+                    num_tickets=int(row["num_tickets"]),
+                    ticket_start_id=start_id,
+                )
+
+                # On success, assign id if not already assigned
+                if not has_id:
+                    with SqliteClient(DATABASE_PATH) as db:
+                        db.assign_id_for_row(
+                            row_date=row["date"], row_name=row["name"], new_id=start_id
+                        )
+                    st.session_state["flash_success"] = (
+                        f"Email sent. Assigned ID {start_id} to this order."
+                    )
+                else:
+                    st.session_state["flash_success"] = "Email re-sent."
+                st.rerun()
+            except Exception as e:
+                st.session_state["flash_error"] = f"Failed to send email: {e}"
+                st.rerun()
 
 
 if __name__ == "__main__":
     main()
-
-

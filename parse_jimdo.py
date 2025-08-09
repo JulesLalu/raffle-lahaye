@@ -16,6 +16,9 @@ class JimdoOrderParser:
 
     def parse_file(self, excel_path: str) -> List[Dict[str, Any]]:
         df = pd.read_excel(excel_path, skiprows=[0])
+        return self.parse_dataframe(df)
+
+    def parse_dataframe(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
         # Filter relevant article
         df = df[df["Article"] == self.article_name]
 
@@ -34,8 +37,11 @@ class JimdoOrderParser:
             rows.append(
                 {
                     "id": None,
-                    "date": pd.to_datetime(row.get("Date de commande")).strftime("%Y-%m-%d %H:%M:%S"),
-                    "firm": str(row.get("Entreprise pour facturation", "")).strip() or None,
+                    "date": pd.to_datetime(row.get("Date de commande")).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "firm": str(row.get("Entreprise pour facturation", "")).strip()
+                    or None,
                     "name": name,
                     "email": str(row.get("Email pour facturation", "")).strip(),
                     "num_tickets": num_tickets,
