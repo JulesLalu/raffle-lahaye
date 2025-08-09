@@ -1,0 +1,4 @@
+lottery_sales.db
+__pycache__/
+*.xlsx
+*tmp*
