@@ -6,14 +6,13 @@ import pandas as pd
 import streamlit as st
 
 from parse_jimdo import JimdoOrderParser
-from sql_client import SqliteClient
+from sql_client import PostgresClient
 from gmail_client import GmailEmailClient
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-DATABASE_PATH = "lottery_sales.db"
 DEFAULT_ARTICLE = "Billet de tombola / Raffle ticket 2024"
 
 
@@ -22,7 +21,7 @@ def ingest_uploaded_file(uploaded_file: io.BytesIO, article_name: str) -> int:
     parser = JimdoOrderParser(article_name=article_name)
     ticket_rows = parser.parse_dataframe(df)
 
-    with SqliteClient(DATABASE_PATH) as db:
+    with PostgresClient() as db:
         db.create_tickets_table()
         inserted = db.insert_tickets(ticket_rows)
     return inserted
@@ -38,6 +37,11 @@ def main() -> None:
     if "flash_error" in st.session_state:
         st.error(st.session_state.pop("flash_error"))
 
+    # Ensure connection pool is properly closed when the app shuts down
+    import atexit
+
+    atexit.register(PostgresClient.close_pool)
+
     with st.sidebar:
         st.header("Import")
         article = DEFAULT_ARTICLE
@@ -50,8 +54,52 @@ def main() -> None:
                 except Exception as e:
                     st.error(f"Failed to ingest: {e}")
 
+        st.header("Export")
+
+        if st.button("Download Excel (one row per ticket)"):
+            try:
+                with PostgresClient() as db:
+                    db.create_tickets_table()
+                    orders = db.fetch_orders_with_assigned_ids()
+                if not orders:
+                    st.warning("No orders with assigned IDs to export.")
+                else:
+                    # Expand orders into per-ticket rows
+                    records = []
+                    for order in orders:
+                        start_id = int(order["id"])  # starting ticket id
+                        for offset in range(int(order["num_tickets"])):
+                            ticket_id = start_id + offset
+                            records.append(
+                                {
+                                    "Date": pd.to_datetime(order["date"]).date(),
+                                    "Achat": order.get("achat") or "",
+                                    "Ticket": f"TICKET_{ticket_id:04d}",
+                                    "Nom": order["name"],
+                                    "email": order["email"],
+                                    "firm": order.get("firm") or "",
+                                }
+                            )
+                    export_df = pd.DataFrame(
+                        records,
+                        columns=["Date", "Achat", "Ticket", "Nom", "email", "firm"],
+                    )
+                    import io as _io
+
+                    buf = _io.BytesIO()
+                    export_df.to_excel(buf, index=False)
+                    buf.seek(0)
+                    st.download_button(
+                        label="Download .xlsx",
+                        data=buf.getvalue(),
+                        file_name="tickets_export.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+
     st.header("Tickets")
-    with SqliteClient(DATABASE_PATH) as db:
+    with PostgresClient() as db:
         db.create_tickets_table()
         rows = db.fetch_tickets()
 
@@ -61,7 +109,7 @@ def main() -> None:
 
     # Render table with action buttons per row
     for idx, row in enumerate(rows):
-        cols = st.columns([2, 2, 3, 3, 2, 2, 2])
+        cols = st.columns([2, 2, 3, 3, 2, 2, 2, 2])
         cols[0].markdown(f"**Date**\n\n{row['date']}")
         cols[1].markdown(f"**Name**\n\n{row['name']}")
         cols[2].markdown(f"**Email**\n\n{row['email']}")
@@ -71,9 +119,27 @@ def main() -> None:
             f"**ID**\n\n{row.get('id') if row.get('id') is not None else '-'}"
         )
 
+        # Achat editor
+        achat_val = cols[6].text_input(
+            "Achat", value=row.get("achat") or "", key=f"achat_{idx}"
+        )
+        if cols[6].button("Save", key=f"save_achat_{idx}"):
+            try:
+                with PostgresClient() as db:
+                    db.update_achat_for_row(
+                        row_date=row["date"],
+                        row_name=row["name"],
+                        achat_value=achat_val or None,
+                    )
+                st.session_state["flash_success"] = "Achat updated."
+                st.rerun()
+            except Exception as e:
+                st.session_state["flash_error"] = f"Failed to update Achat: {e}"
+                st.rerun()
+
         has_id = row.get("id") is not None
         send_label = "Send email" if not has_id else "Resend"
-        if cols[6].button(send_label, key=f"send_{idx}"):
+        if cols[7].button(send_label, key=f"send_{idx}"):
             try:
                 email_client = GmailEmailClient()
 
@@ -82,7 +148,7 @@ def main() -> None:
                     start_id = int(row["id"])  # reuse existing id on resend
                 else:
                     # Compute new id per rule: max(id) + num_tickets of max-id row
-                    with SqliteClient(DATABASE_PATH) as db:
+                    with PostgresClient() as db:
                         max_id, max_span = db.get_max_id_and_span()
                         if max_id is None:
                             start_id = 1
@@ -99,7 +165,7 @@ def main() -> None:
 
                 # On success, assign id if not already assigned
                 if not has_id:
-                    with SqliteClient(DATABASE_PATH) as db:
+                    with PostgresClient() as db:
                         db.assign_id_for_row(
                             row_date=row["date"], row_name=row["name"], new_id=start_id
                         )

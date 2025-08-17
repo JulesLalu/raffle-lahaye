@@ -12,6 +12,7 @@ dependencies = [
     "google-auth>=2.35.0",
     "google-auth-oauthlib>=1.2.1",
     "dotenv>=0.9.9",
+    "psycopg2-binary>=2.9.0",
 ]
 
 [dependency-groups]

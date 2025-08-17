@@ -45,6 +45,7 @@ class JimdoOrderParser:
                     "name": name,
                     "email": str(row.get("Email pour facturation", "")).strip(),
                     "num_tickets": num_tickets,
+                    "achat": None,
                 }
             )
 
