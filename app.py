@@ -8,6 +8,7 @@ import streamlit as st
 from parse_jimdo import JimdoOrderParser
 from sql_client import PostgresClient
 from gmail_client import GmailEmailClient
+from google_auth import init_google_auth
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,7 +30,24 @@ def ingest_uploaded_file(uploaded_file: io.BytesIO, article_name: str) -> int:
 
 def main() -> None:
     st.set_page_config(page_title="Tombola Tickets", page_icon="🎟️", layout="wide")
+
+    # Initialize Google authentication
+    auth = init_google_auth()
+    if not auth:
+        st.error(
+            "❌ Authentication system unavailable. Please check your configuration."
+        )
+        return
+
+    # Check if user is authenticated
+    if not auth.require_auth():
+        return
+
+    # User is authenticated, show the main app
     st.title("Tombola - Import and Browse Tickets")
+
+    if st.button("🚪 Logout"):
+        auth.logout()
 
     # Flash messages persisted across reruns
     if "flash_success" in st.session_state:
@@ -43,6 +61,21 @@ def main() -> None:
     atexit.register(PostgresClient.close_pool)
 
     with st.sidebar:
+        # Authentication Status
+        st.header("🔐 Authentication")
+        auth_status = auth.get_auth_status()
+        if auth_status["status"] == "authenticated":
+            st.success("✅ Authenticated")
+            user = auth_status.get("user", {})
+            if user.get("email"):
+                st.info(f"Email: {user['email']}")
+            if auth_status.get("expires_at"):
+                st.info(f"Session expires: {auth_status['expires_at']}")
+        else:
+            st.warning("⚠️ Not authenticated")
+
+        st.markdown("---")
+
         st.header("Import")
         article = DEFAULT_ARTICLE
         uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx"])
@@ -60,13 +93,6 @@ def main() -> None:
         try:
             gmail_client = GmailEmailClient()
             auth_status = gmail_client.get_authorization_status()
-
-            if auth_status["status"] == "authorized":
-                st.success(f"✅ Gmail: {auth_status['message']}")
-                if auth_status.get("expires_at"):
-                    st.info(f"Token expires: {auth_status['expires_at']}")
-            else:
-                st.warning(f"⚠️ Gmail: {auth_status['message']}")
 
         except Exception as e:
             st.error(f"❌ Gmail client error: {e}")

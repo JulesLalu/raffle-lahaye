@@ -13,7 +13,12 @@ from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
 
-GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+GMAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "openid",
+]
 
 
 class GmailEmailClient:
@@ -48,7 +53,9 @@ class GmailEmailClient:
 
     def _get_stored_token(self) -> Optional[dict]:
         """Get token from Streamlit session state."""
-        return st.session_state.get("gmail_token")
+        return st.session_state.get("gmail_token") or st.session_state.get(
+            "google_auth_token"
+        )
 
     def _store_token(self, token_data: dict) -> None:
         """Store token in Streamlit session state."""
