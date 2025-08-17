@@ -54,7 +54,22 @@ def main() -> None:
                 except Exception as e:
                     st.error(f"Failed to ingest: {e}")
 
-        st.header("Export")
+                st.header("Export")
+
+        # Gmail Status
+        try:
+            gmail_client = GmailEmailClient()
+            auth_status = gmail_client.get_authorization_status()
+
+            if auth_status["status"] == "authorized":
+                st.success(f"✅ Gmail: {auth_status['message']}")
+                if auth_status.get("expires_at"):
+                    st.info(f"Token expires: {auth_status['expires_at']}")
+            else:
+                st.warning(f"⚠️ Gmail: {auth_status['message']}")
+
+        except Exception as e:
+            st.error(f"❌ Gmail client error: {e}")
 
         if st.button("Download Excel (one row per ticket)"):
             try:

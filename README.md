@@ -25,6 +25,7 @@ This project has been migrated from SQLite to PostgreSQL to support cloud deploy
 
 - Python 3.9+
 - PostgreSQL database (local or hosted)
+- Gmail API credentials (for email functionality)
 - Required Python packages (see `pyproject.toml`)
 
 ### Local Development
