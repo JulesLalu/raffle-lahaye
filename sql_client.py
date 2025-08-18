@@ -149,6 +149,30 @@ class PostgresClient:
                     raise
         return inserted_count
 
+    def insert_single_order(self, order_data: Dict[str, Any]) -> bool:
+        """Insert a single order into the database.
+
+        Args:
+            order_data: Dictionary containing order data with keys:
+                       date, name, email, firm, num_tickets, achat
+
+        Returns:
+            True if insertion was successful, False otherwise.
+        """
+        try:
+            # Prepare the insert statement
+            columns = list(order_data.keys())
+            placeholders = ", ".join([f"%({col})s" for col in columns])
+            insert_query = (
+                f"INSERT INTO tickets ({', '.join(columns)}) VALUES ({placeholders})"
+            )
+
+            self.execute(insert_query, order_data)
+            return True
+        except Exception as e:
+            print(f"Error inserting order: {e}")
+            return False
+
     def fetch_tickets(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """Return tickets as a list of dictionaries ordered by date desc.
 
@@ -224,6 +248,16 @@ class PostgresClient:
             self.execute(
                 f"DELETE FROM tickets WHERE id IN ({placeholders})", ticket_ids_list
             )
+
+    def delete_order_by_name_date(self, row_date: str, row_name: str) -> None:
+        """Delete an order identified by unique key (name, date).
+
+        This is useful for removing orders that don't have IDs yet.
+        """
+        self.execute(
+            "DELETE FROM tickets WHERE name = %(name)s AND date = %(date)s",
+            {"name": row_name, "date": row_date},
+        )
 
     @classmethod
     def close_pool(cls) -> None:
