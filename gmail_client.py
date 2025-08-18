@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import os
-from email.message import EmailMessage
+from email.mime.image import MIMEImage
 from typing import Optional
 
 import streamlit as st
@@ -102,28 +102,354 @@ class GmailEmailClient:
         num_tickets: int,
         ticket_start_id: int,
     ) -> None:
-        """Send ticket email."""
+        """Send ticket email with professional HTML formatting."""
         to_email = self._compute_recipient(db_email)
         ticket_end_id = ticket_start_id + num_tickets - 1
 
         subject = "Vos billets de tombola / Your raffle tickets"
-        body = (
-            f"Bonjour {name},\n\n"
-            f"Merci pour votre achat. Voici vos numéros de billets: {ticket_start_id} à {ticket_end_id}.\n"
-            f"Nombre de billets: {num_tickets}.\n\n"
-            f"Ceci est un email {'de production' if self.is_prod else 'de test (redirigé)'}."
+
+        # Create HTML email body with professional styling
+        html_body = self._create_html_email_body(
+            name, num_tickets, ticket_start_id, ticket_end_id
         )
 
-        message = EmailMessage()
+        # Create plain text version as fallback
+        text_body = self._create_text_email_body(
+            name, num_tickets, ticket_start_id, ticket_end_id
+        )
+
+        # Create multipart message with both HTML and plain text
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+
+        # Create the main alternative multipart (HTML vs plain text)
+        message = MIMEMultipart("alternative")
         message["From"] = self.sender_email
         message["To"] = to_email
         message["Subject"] = subject
-        message.set_content(body)
+
+        # Add plain text version first (fallback)
+        text_part = MIMEText(text_body, "plain", "utf-8")
+        message.attach(text_part)
+
+        # Create related multipart for HTML content and images
+        html_part = MIMEMultipart("related")
+
+        # Add HTML body
+        html_body_part = MIMEText(html_body, "html", "utf-8")
+        html_part.attach(html_body_part)
+
+        # Add images if they exist
+        self._attach_images(html_part)
+
+        # Attach the HTML part to the main message
+        message.attach(html_part)
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         create_message = {"raw": encoded_message}
 
         self.service.users().messages().send(userId="me", body=create_message).execute()
+
+    def _create_html_email_body(
+        self, name: str, num_tickets: int, ticket_start_id: int, ticket_end_id: int
+    ) -> str:
+        """Create beautifully formatted HTML email body."""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Tombola Tickets - Kermesse Francophone</title>
+            <style>
+                body {{
+                    font-family: 'Georgia', 'Times New Roman', serif;
+                    line-height: 1.6;
+                    color: #2c3e50;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #ffffff;
+                }}
+                .header {{
+                    text-align: center;
+                    margin-bottom: 30px;
+                }}
+                .greeting {{
+                    font-size: 24px;
+                    color: #0c5494;
+                    margin-bottom: 20px;
+                    font-style: italic;
+                }}
+                .greeting-en {{
+                    font-size: 20px;
+                    color: #0c5494;
+                    font-style: italic;
+                    margin-bottom: 20px;
+                }}
+                .thank-you {{
+                    font-size: 18px;
+                    color: #0c5494;
+                    margin-bottom: 25px;
+                    text-align: center;
+                }}
+                .highlight {{
+                    font-size: 18px;
+                    color: #fc0afb;
+                    font-style: italic;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }}
+                .results {{
+                    font-size: 20px;
+                    color: #fc0afb;
+                    font-weight: bold;
+                    font-style: italic;
+                    text-align: center;
+                    margin-bottom: 25px;
+                }}
+                .ticket-section {{
+                    text-align: center;
+                    margin: 30px 0;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                    border-radius: 10px;
+                }}
+                .ticket-numbers {{
+                    font-size: 28px;
+                    color: #fc0afb;
+                    font-weight: bold;
+                    background-color: #fff3cd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    display: inline-block;
+                    margin: 15px 0;
+                }}
+                .project-link {{
+                    text-align: center;
+                    margin: 25px 0;
+                }}
+                .project-link a {{
+                    color: #0c5494;
+                    text-decoration: underline;
+                    font-size: 16px;
+                    font-style: italic;
+                    font-weight: bold;
+                }}
+                .project-link-en {{
+                    text-align: center;
+                    margin: 15px 0;
+                }}
+                .project-link-en a {{
+                    color: #0c5494;
+                    text-decoration: underline;
+                    font-size: 16px;
+                    font-style: italic;
+                    font-weight: bold;
+                }}
+                .project-list {{
+                    margin: 15px 0;
+                    padding-left: 20px;
+                }}
+                .project-item {{
+                    margin: 8px 0;
+                    display: flex;
+                    justify-content: space-between;
+                }}
+                .project-cost {{
+                    font-weight: bold;
+                    color: #fc0afb;
+                }}
+                .date {{
+                    font-size: 30px;
+                    color: #fc0afb;
+                    font-weight: bold;
+                    text-align: center;
+                    margin-bottom: 15px;
+                }}
+            </style>
+        </head
+        <body>
+            <div class="header">
+                <div class="greeting">Chère amie / cher ami de la Kermesse,</div>
+                <div class="greeting-en">Dear friend of the Kermesse,</div>
+            </div>
+
+            <div class="thank-you">
+                Un immense merci de contribuer à la Kermesse par l'achat de tickets de tombola.
+            </div>
+
+            <div class="highlight">
+                Pour mémoire, la Kermesse est l'événement le plus important de la communauté francophone aux Pays-Bas.
+            </div>
+
+            <div class="results">
+                Résultat 2023 : 36 300 euros !
+            </div>
+
+            <div class="thank-you">
+                Cela a été possible, en particulier grâce au succès de la Tombola, et donc à vos contributions.
+            </div>
+
+            <div class="results">
+                En 2023, 987 tickets vendus !<br>
+                Soit 11 844 euros collectés.
+            </div>
+
+            <div class="project-link">
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                    Consulter les projets financés avec la Kermesse 2023
+                </a>
+            </div>
+
+            <div class="project-link-en">
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                    See the projects we have supported with the Kermesse 2023
+                </a>
+            </div>
+
+            <div class="ticket-section">
+                <div style="color: #0c5494; font-size: 16px; margin-bottom: 15px;">
+                    Vos numéros de tickets sont les suivants :<br>
+                    <span style="font-style: italic;">Your ticket numbers are as follows :</span>
+                </div>
+                <div class="ticket-numbers">
+                    {"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
+                </div>
+            </div>
+
+            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 700px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px;">
+
+            <div class="thank-you">    
+                Nous vous donnons rendez-vous le 24 novembre 
+                pour le tirage au sort et l’annonce des résultats !
+            </div>
+            
+            <div class="highlight">    
+                Bonne chance !
+            </div>
+
+            <div class="thank-you">    
+                Chère amie / cher ami de la Kermesse,
+                Nous serons également très heureux de vous accueillir :
+            </div>
+
+            <div class="date">    
+                le 23 novembre, à partir de 12:00, au lycée français, 
+            </div>
+
+            <div class="project-link">
+                <a href="https://www.kermessefrancophone.nl/venez-%C3%A0-la-kermesse-1/le-programme/" target="_blank">
+                    pour une journée de retrouvailles et de festivités :
+                </a>
+            </div>
+
+            <div class="highlight">   
+                Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand catalan, malgache
+            </div>
+
+            <div class="highlight">   
+                Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
+            </div>
+
+            <div class="highlight">   
+                Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants
+            </div>
+
+            <div class="date">    
+                TOGETHER, we can do it !
+            </div>
+
+            <img src="cid:kermesse_enfants" alt="Kermesse Enfants" style="max-width: 1000px; height: auto; display: block; margin: 0 auto;">
+            
+            <img src="cid:kermesse_logo" alt="Kermesse Logo" style="max-width: 700px; height: auto; display: block; margin: 0 auto;">
+
+            <div style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 12px;">
+                Ceci est un email {"de production" if self.is_prod else "de test (redirigé)"}.
+            </div>
+        </body>
+        </html>
+        """
+
+    def _create_text_email_body(
+        self, name: str, num_tickets: int, ticket_start_id: int, ticket_end_id: int
+    ) -> str:
+        """Create plain text version of the email as fallback."""
+        return f"""
+Bonjour {name},
+
+Un immense merci de contribuer à la Kermesse par l'achat de tickets de tombola.
+
+Pour mémoire, la Kermesse est l'événement le plus important de la communauté francophone aux Pays-Bas.
+
+Résultat 2023 : 36 300 euros !
+
+Cela a été possible, en particulier grâce au succès de la Tombola, et donc à vos contributions.
+
+En 2023, 987 tickets vendus !
+Soit 11 844 euros collectés.
+
+Consulter les projets financés avec la Kermesse 2023 :
+https://kermesse-francophone.nl/projects-2023
+
+Vos numéros de tickets sont les suivants :
+{"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
+
+Nous vous donnons rendez-vous le 24 novembre pour le tirage au sort et l’annonce des résultats !
+Bonne chance !
+
+Chère amie / cher ami de la Kermesse, Nous serons également très heureux de vous accueillir le 23 novembre, à partir de 12:00, au lycée français, pour une journée de retrouvailles et de festivités :
+Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand catalan, malgache
+Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
+Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants
+
+TOGETHER, we can do it !
+
+Ceci est un email {"de production" if self.is_prod else "de test (redirigé)"}.
+        """
+
+    def _attach_images(self, html_part) -> None:
+        """Attach images to the HTML part using CID references."""
+        # Define all images to attach
+        images_to_attach = [
+            {
+                "path": "img/kermesse_evenements.png",
+                "cid": "kermesse_evenements",
+                "filename": "kermesse_evenements.png",
+            },
+            {
+                "path": "img/kermesse_enfants.png",
+                "cid": "kermesse_enfants",
+                "filename": "kermesse_enfants.png",
+            },
+            {
+                "path": "img/kermesse_logo.png",
+                "cid": "kermesse_logo",
+                "filename": "kermesse_logo.png",
+            },
+        ]
+
+        # Attach each image
+        for img_config in images_to_attach:
+            try:
+                if os.path.exists(img_config["path"]):
+                    with open(img_config["path"], "rb") as img_file:
+                        img_data = img_file.read()
+
+                    # Create MIME image part
+                    img = MIMEImage(img_data, "png")
+                    img.add_header("Content-ID", f"<{img_config['cid']}>")
+                    img.add_header(
+                        "Content-Disposition", "inline", filename=img_config["filename"]
+                    )
+                    html_part.attach(img)
+                    print(f"✅ Attached image: {img_config['filename']}")
+                else:
+                    print(f"⚠️ Image not found: {img_config['path']}")
+
+            except Exception as e:
+                print(f"❌ Failed to attach {img_config['filename']}: {e}")
+                # No fallback - image will not display if attachment fails
 
     def is_authorized(self) -> bool:
         """Check if the client is properly authorized."""

@@ -42,9 +42,7 @@ This project has been migrated from SQLite to PostgreSQL to support cloud deploy
    ```
 
 3. **Set up environment variables**:
-   ```bash
-   cp env.example .env
-   # Edit .env with your database credentials
+   Edit .env with your database credentials
    ```
 
 4. **Run the application**:
@@ -63,14 +61,11 @@ DB_PORT=5432
 DB_USER=your_username
 DB_PASSWORD=your_password
 DB_NAME=tombola
-
-# Alternative: Connection URI
-# DATABASE_URL=postgresql://user:password@host:port/database
 ```
 
 ## Deployment
 
-This application is designed to be deployed on Streamlit Cloud. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+This application is designed to be deployed on Streamlit Cloud.
 
 ## Project Structure
 
@@ -81,10 +76,7 @@ tombola/
 ├── parse_jimdo.py      # Excel parsing logic
 ├── gmail_client.py     # Gmail integration (if needed)
 ├── pyproject.toml      # Project dependencies
-├── requirements.txt    # Streamlit Cloud requirements
 ├── .streamlit/         # Streamlit configuration
-├── env.example         # Environment variables template
-└── DEPLOYMENT.md       # Deployment guide
 ```
 
 ## Database Schema
@@ -103,15 +95,3 @@ CREATE TABLE tickets (
     UNIQUE KEY unique_name_date (name, date)
 );
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-[Add your license here]
