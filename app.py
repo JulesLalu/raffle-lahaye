@@ -159,54 +159,75 @@ def main() -> None:
                 st.error(f"Export failed: {e}")
 
     st.header("Tickets")
+
     with PostgresClient() as db:
         db.create_tickets_table()
-        rows = db.fetch_tickets()
 
-    if not rows:
-        st.info("No tickets in database yet. Upload an Excel file to get started.")
+        # Fetch orders without IDs (priority display)
+        orders_without_id = db.fetch_tickets()
+        orders_without_id = [row for row in orders_without_id if row.get("id") is None]
+
+        # Fetch orders with IDs (collapsible section)
+        orders_with_id = db.fetch_orders_with_assigned_ids()
+
+    # Summary statistics
+    total_orders = len(orders_without_id) + len(orders_with_id)
+    if total_orders > 0:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("📧 Pending Emails", len(orders_without_id))
+        with col2:
+            st.metric("✅ Processed Orders", len(orders_with_id))
+        with col3:
+            st.metric("📊 Total Orders", total_orders)
+        st.markdown("---")
+    else:
+        st.info("📭 No orders in database yet. Upload an Excel file to get started.")
         return
 
-    # Render table with action buttons per row
-    for idx, row in enumerate(rows):
-        cols = st.columns([2, 2, 3, 3, 2, 2, 2, 2])
-        cols[0].markdown(f"**Date**\n\n{row['date']}")
-        cols[1].markdown(f"**Name**\n\n{row['name']}")
-        cols[2].markdown(f"**Email**\n\n{row['email']}")
-        cols[3].markdown(f"**Firm**\n\n{row.get('firm') or ''}")
-        cols[4].markdown(f"**Tickets**\n\n{row['num_tickets']}")
-        cols[5].markdown(
-            f"**ID**\n\n{row.get('id') if row.get('id') is not None else '-'}"
+    # Show orders without IDs (priority - need emails)
+    st.subheader(f"📧 Orders Needing Emails ({len(orders_without_id)})")
+
+    if not orders_without_id:
+        st.success("🎉 All orders have been processed! No emails pending.")
+    else:
+        st.info(
+            "💡 These orders need emails sent. Click 'Send email' to assign ticket IDs and send emails."
         )
 
-        # Achat editor
-        achat_val = cols[6].text_input(
-            "Achat", value=row.get("achat") or "", key=f"achat_{idx}"
-        )
-        if cols[6].button("Save", key=f"save_achat_{idx}"):
-            try:
-                with PostgresClient() as db:
-                    db.update_achat_for_row(
-                        row_date=row["date"],
-                        row_name=row["name"],
-                        achat_value=achat_val or None,
-                    )
-                st.session_state["flash_success"] = "Achat updated."
-                st.rerun()
-            except Exception as e:
-                st.session_state["flash_error"] = f"Failed to update Achat: {e}"
-                st.rerun()
+        # Render table for orders without IDs
+        for idx, row in enumerate(orders_without_id):
+            cols = st.columns([2, 2, 3, 3, 2, 2, 2, 2])
+            cols[0].markdown(f"**Date**\n\n{row['date']}")
+            cols[1].markdown(f"**Name**\n\n{row['name']}")
+            cols[2].markdown(f"**Email**\n\n{row['email']}")
+            cols[3].markdown(f"**Firm**\n\n{row.get('firm') or ''}")
+            cols[4].markdown(f"**Tickets**\n\n{row['num_tickets']}")
+            cols[5].markdown("**ID**\n\n-")
 
-        has_id = row.get("id") is not None
-        send_label = "Send email" if not has_id else "Resend"
-        if cols[7].button(send_label, key=f"send_{idx}"):
-            try:
-                email_client = GmailEmailClient()
+            # Achat editor
+            achat_val = cols[6].text_input(
+                "Achat", value=row.get("achat") or "", key=f"achat_no_id_{idx}"
+            )
+            if cols[6].button("Save", key=f"save_achat_no_id_{idx}"):
+                try:
+                    with PostgresClient() as db:
+                        db.update_achat_for_row(
+                            row_date=row["date"],
+                            row_name=row["name"],
+                            achat_value=achat_val or None,
+                        )
+                    st.session_state["flash_success"] = "Achat updated."
+                    st.rerun()
+                except Exception as e:
+                    st.session_state["flash_error"] = f"Failed to update Achat: {e}"
+                    st.rerun()
 
-                # Determine starting ticket id
-                if has_id:
-                    start_id = int(row["id"])  # reuse existing id on resend
-                else:
+            # Send email button
+            if cols[7].button("Send email", key=f"send_no_id_{idx}"):
+                try:
+                    email_client = GmailEmailClient()
+
                     # Compute new id per rule: max(id) + num_tickets of max-id row
                     with PostgresClient() as db:
                         max_id, max_span = db.get_max_id_and_span()
@@ -215,16 +236,15 @@ def main() -> None:
                         else:
                             start_id = max_id + (max_span or 0)
 
-                # Send email (use starting ticket id)
-                email_client.send_ticket_email(
-                    db_email=row["email"],
-                    name=row["name"],
-                    num_tickets=int(row["num_tickets"]),
-                    ticket_start_id=start_id,
-                )
+                    # Send email (use starting ticket id)
+                    email_client.send_ticket_email(
+                        db_email=row["email"],
+                        name=row["name"],
+                        num_tickets=int(row["num_tickets"]),
+                        ticket_start_id=start_id,
+                    )
 
-                # On success, assign id if not already assigned
-                if not has_id:
+                    # On success, assign id
                     with PostgresClient() as db:
                         db.assign_id_for_row(
                             row_date=row["date"], row_name=row["name"], new_id=start_id
@@ -232,12 +252,68 @@ def main() -> None:
                     st.session_state["flash_success"] = (
                         f"Email sent. Assigned ID {start_id} to this order."
                     )
-                else:
-                    st.session_state["flash_success"] = "Email re-sent."
-                st.rerun()
-            except Exception as e:
-                st.session_state["flash_error"] = f"Failed to send email: {e}"
-                st.rerun()
+                    st.rerun()
+                except Exception as e:
+                    st.session_state["flash_error"] = f"Failed to send email: {e}"
+                    st.rerun()
+
+    # Collapsible section for orders with IDs (already processed)
+    if orders_with_id:
+        st.info("💾 Some orders have already been processed. Click below to view them.")
+        with st.expander(
+            f"📋 Already Processed Orders ({len(orders_with_id)})", expanded=False
+        ):
+            st.info("These orders already have ticket IDs assigned and emails sent.")
+
+            # Render table for orders with IDs
+            for idx, row in enumerate(orders_with_id):
+                cols = st.columns([2, 2, 3, 3, 2, 2, 2, 2])
+                cols[0].markdown(f"**Date**\n\n{row['date']}")
+                cols[1].markdown(f"**Name**\n\n{row['name']}")
+                cols[2].markdown(f"**Email**\n\n{row['email']}")
+                cols[3].markdown(f"**Firm**\n\n{row.get('firm') or ''}")
+                cols[4].markdown(f"**Tickets**\n\n{row['num_tickets']}")
+                cols[5].markdown(f"**ID**\n\n{row['id']}")
+
+                # Achat editor
+                achat_val = cols[6].text_input(
+                    "Achat", value=row.get("achat") or "", key=f"achat_with_id_{idx}"
+                )
+                if cols[6].button("Save", key=f"save_achat_with_id_{idx}"):
+                    try:
+                        with PostgresClient() as db:
+                            db.update_achat_for_row(
+                                row_date=row["date"],
+                                row_name=row["name"],
+                                achat_value=achat_val or None,
+                            )
+                        st.session_state["flash_success"] = "Achat updated."
+                        st.rerun()
+                    except Exception as e:
+                        st.session_state["flash_error"] = f"Failed to update Achat: {e}"
+                        st.rerun()
+
+                # Resend email button
+                if cols[7].button("Resend", key=f"resend_with_id_{idx}"):
+                    try:
+                        email_client = GmailEmailClient()
+
+                        # Use existing ID for resend
+                        start_id = int(row["id"])
+
+                        # Send email (use existing ticket id)
+                        email_client.send_ticket_email(
+                            db_email=row["email"],
+                            name=row["name"],
+                            num_tickets=int(row["num_tickets"]),
+                            ticket_start_id=start_id,
+                        )
+
+                        st.session_state["flash_success"] = "Email re-sent."
+                        st.rerun()
+                    except Exception as e:
+                        st.session_state["flash_error"] = f"Failed to send email: {e}"
+                        st.rerun()
 
 
 if __name__ == "__main__":
