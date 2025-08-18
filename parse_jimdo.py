@@ -14,13 +14,26 @@ class JimdoOrderParser:
     def __init__(self, article_name: str) -> None:
         self.article_name = article_name
 
-    def parse_file(self, excel_path: str) -> List[Dict[str, Any]]:
+    def parse_file(
+        self, excel_path: str, min_date: pd.Timestamp = None
+    ) -> List[Dict[str, Any]]:
         df = pd.read_excel(excel_path, skiprows=[0])
-        return self.parse_dataframe(df)
+        return self.parse_dataframe(df, min_date=min_date)
 
-    def parse_dataframe(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def parse_dataframe(
+        self, df: pd.DataFrame, min_date: pd.Timestamp = None
+    ) -> List[Dict[str, Any]]:
         # Filter relevant article
         df = df[df["Article"] == self.article_name]
+
+        # Filter by date if min_date is provided
+        if min_date is not None:
+            # Convert order dates to datetime for comparison
+            df["Date de commande"] = pd.to_datetime(df["Date de commande"])
+            df = df[df["Date de commande"] >= min_date]
+            print(
+                f"📅 Filtered orders from {min_date.strftime('%Y-%m-%d')} onwards: {len(df)} orders found"
+            )
 
         rows: List[Dict[str, Any]] = []
         for _, row in df.iterrows():
@@ -58,7 +71,10 @@ def main() -> None:
     article = "Billet de tombola / Raffle ticket 2024"
 
     parser = JimdoOrderParser(article_name=article)
-    ticket_rows = parser.parse_file(excel_file)
+
+    # Example: Filter orders from September 1st, 2025 onwards
+    min_date = pd.to_datetime("2025-09-01")
+    ticket_rows = parser.parse_file(excel_file, min_date=min_date)
 
     with SqliteClient(database_path) as db:
         db.create_tickets_table()

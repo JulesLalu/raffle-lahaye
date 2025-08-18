@@ -17,10 +17,12 @@ load_dotenv()
 DEFAULT_ARTICLE = "Billet de tombola / Raffle ticket 2024"
 
 
-def ingest_uploaded_file(uploaded_file: io.BytesIO, article_name: str) -> int:
+def ingest_uploaded_file(
+    uploaded_file: io.BytesIO, article_name: str, min_date: pd.Timestamp = None
+) -> int:
     df = pd.read_excel(uploaded_file, skiprows=[0])
     parser = JimdoOrderParser(article_name=article_name)
-    ticket_rows = parser.parse_dataframe(df)
+    ticket_rows = parser.parse_dataframe(df, min_date=min_date)
 
     with PostgresClient() as db:
         db.create_tickets_table()
@@ -66,11 +68,6 @@ def main() -> None:
         auth_status = auth.get_auth_status()
         if auth_status["status"] == "authenticated":
             st.success("✅ Authenticated")
-            user = auth_status.get("user", {})
-            if user.get("email"):
-                st.info(f"Email: {user['email']}")
-            if auth_status.get("expires_at"):
-                st.info(f"Session expires: {auth_status['expires_at']}")
         else:
             st.warning("⚠️ Not authenticated")
 
@@ -78,14 +75,36 @@ def main() -> None:
 
         st.header("Import")
         article = DEFAULT_ARTICLE
+
+        # Date filter for import
+        st.subheader("📅 Date Filter")
+
+        min_date = st.date_input(
+            "Import orders from:",
+            value=pd.to_datetime("2025-09-01").date(),
+            format="DD/MM/YYYY",
+            help="Orders before this date will be excluded from import",
+        )
+
+        # Show filter status
+        st.caption(
+            f"🔍 Will import orders from **{min_date.strftime('%d/%m/%Y')}** onwards"
+        )
+
         uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx"])
         if uploaded is not None:
-            if st.button("Ingest into database"):
+            if st.button("🚀 Ingest into database", type="primary"):
                 try:
-                    inserted = ingest_uploaded_file(uploaded, article)
-                    st.success(f"Inserted {inserted} row(s) into the database")
+                    # Convert date to pandas timestamp for filtering
+                    min_date_ts = pd.to_datetime(min_date)
+                    inserted = ingest_uploaded_file(
+                        uploaded, article, min_date=min_date_ts
+                    )
+                    st.success(
+                        f"✅ Successfully inserted {inserted} order(s) into the database"
+                    )
                 except Exception as e:
-                    st.error(f"Failed to ingest: {e}")
+                    st.error(f"❌ Failed to ingest: {e}")
 
                 st.header("Export")
 
