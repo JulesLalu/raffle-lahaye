@@ -53,9 +53,9 @@ def main() -> None:
 
     # Flash messages persisted across reruns
     if "flash_success" in st.session_state:
-        st.success(st.session_state.pop("flash_success"))
+        st.toast(st.session_state.pop("flash_success"), icon="✅")
     if "flash_error" in st.session_state:
-        st.error(st.session_state.pop("flash_error"))
+        st.toast(st.session_state.pop("flash_error"), icon="❌")
 
     # Ensure connection pool is properly closed when the app shuts down
     import atexit
