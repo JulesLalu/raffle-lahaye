@@ -67,7 +67,7 @@ def main() -> None:
         st.header("🔐 Authentication")
         auth_status = auth.get_auth_status()
         if auth_status["status"] == "authenticated":
-            st.success("✅ Authenticated")
+            st.success("✅ Authenticated & Authorized")
         else:
             st.warning("⚠️ Not authenticated")
 
