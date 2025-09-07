@@ -4,8 +4,7 @@ import re
 from typing import Any, Dict, List
 
 import pandas as pd
-
-from sql_client import SqliteClient
+import os
 
 
 class JimdoOrderParser:
@@ -17,7 +16,37 @@ class JimdoOrderParser:
     def parse_file(
         self, excel_path: str, min_date: pd.Timestamp = None
     ) -> List[Dict[str, Any]]:
-        df = pd.read_excel(excel_path, skiprows=[0])
+        # Read the Excel file without skipping any rows
+        df = pd.read_excel(excel_path)
+
+        # Find the header row by looking for expected column names
+        expected_columns = [
+            "Article",
+            "Date de commande",
+            "Nom pour facturation",
+            "Prénom pour facturation",
+            "Email pour facturation",
+        ]
+        header_row_index = None
+
+        # Search through the first 10 rows to find the header
+        for i in range(min(10, len(df))):
+            row_values = df.iloc[i].astype(str).str.lower().tolist()
+            row_text = " ".join(row_values)
+
+            # Check if this row contains the expected column names
+            if any(col.lower() in row_text for col in expected_columns):
+                header_row_index = i
+                break
+
+        # If we found a header row, use it
+        if header_row_index is not None:
+            # Skip all rows before the header
+            df = pd.read_excel(excel_path, skiprows=list(range(header_row_index + 1)))
+        else:
+            # Fallback: assume header is on first row
+            pass
+
         return self.parse_dataframe(df, min_date=min_date)
 
     def parse_dataframe(
@@ -67,20 +96,13 @@ class JimdoOrderParser:
 
 def main() -> None:
     excel_file = "./boutique_jimdo.xlsx"
-    database_path = "lottery_sales.db"
-    article = "Billet de tombola / Raffle ticket 2024"
+    article = os.getenv("ARTICLE_NAME", "Billet de tombola / Raffle ticket 2024")
 
     parser = JimdoOrderParser(article_name=article)
 
     # Example: Filter orders from September 1st, 2025 onwards
     min_date = pd.to_datetime("2025-09-01")
-    ticket_rows = parser.parse_file(excel_file, min_date=min_date)
-
-    with SqliteClient(database_path) as db:
-        db.create_tickets_table()
-        inserted = db.insert_tickets(ticket_rows)
-
-    print(f"Inserted {inserted} order(s) into the database.")
+    parser.parse_file(excel_file, min_date=min_date)
 
 
 if __name__ == "__main__":

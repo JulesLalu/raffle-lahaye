@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import os
 
 import pandas as pd
 import streamlit as st
@@ -20,9 +21,8 @@ DEFAULT_ARTICLE = "Billet de tombola / Raffle ticket 2024"
 def ingest_uploaded_file(
     uploaded_file: io.BytesIO, article_name: str, min_date: pd.Timestamp = None
 ) -> int:
-    df = pd.read_excel(uploaded_file, skiprows=[0])
     parser = JimdoOrderParser(article_name=article_name)
-    ticket_rows = parser.parse_dataframe(df, min_date=min_date)
+    ticket_rows = parser.parse_file(uploaded_file, min_date=min_date)
 
     with PostgresClient() as db:
         db.create_tickets_table()
@@ -74,7 +74,7 @@ def main() -> None:
         st.markdown("---")
 
         st.header("Import")
-        article = DEFAULT_ARTICLE
+        article = os.getenv("ARTICLE_NAME", DEFAULT_ARTICLE)
 
         # Date filter for import
         st.subheader("📅 Date Filter")
