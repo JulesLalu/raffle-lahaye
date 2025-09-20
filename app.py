@@ -15,13 +15,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-DEFAULT_ARTICLE = "Billet de tombola / Raffle ticket 2024"
+DEFAULT_ARTICLE_TYPE1 = "Billet de tombola / Raffle ticket 2024"
+DEFAULT_ARTICLE_TYPE2 = "Tikkie tombola only!"
 
 
 def ingest_uploaded_file(
-    uploaded_file: io.BytesIO, article_name: str, min_date: pd.Timestamp = None
+    uploaded_file: io.BytesIO,
+    article_name_type1: str,
+    article_name_type2: str,
+    min_date: pd.Timestamp = None,
 ) -> int:
-    parser = JimdoOrderParser(article_name=article_name)
+    parser = JimdoOrderParser(
+        article_name_type1=article_name_type1, article_name_type2=article_name_type2
+    )
     ticket_rows = parser.parse_file(uploaded_file, min_date=min_date)
 
     with PostgresClient() as db:
@@ -74,7 +80,8 @@ def main() -> None:
         st.markdown("---")
 
         st.header("Import")
-        article = os.getenv("ARTICLE_NAME", DEFAULT_ARTICLE)
+        article_type1 = os.getenv("ARTICLE_NAME_TYPE1", DEFAULT_ARTICLE_TYPE1)
+        article_type2 = os.getenv("ARTICLE_NAME_TYPE2", DEFAULT_ARTICLE_TYPE2)
 
         # Date filter for import
         st.subheader("📅 Date Filter")
@@ -91,14 +98,14 @@ def main() -> None:
             f"🔍 Will import orders from **{min_date.strftime('%d/%m/%Y')}** onwards"
         )
 
-        uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx"])
+        uploaded = st.file_uploader("Upload Jimdo Excel export", type=["xlsx", "csv"])
         if uploaded is not None:
             if st.button("🚀 Ingest into database", type="primary"):
                 try:
                     # Convert date to pandas timestamp for filtering
                     min_date_ts = pd.to_datetime(min_date)
                     inserted = ingest_uploaded_file(
-                        uploaded, article, min_date=min_date_ts
+                        uploaded, article_type1, article_type2, min_date=min_date_ts
                     )
                     st.success(
                         f"✅ Successfully inserted {inserted} order(s) into the database"
