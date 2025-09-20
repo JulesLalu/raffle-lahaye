@@ -24,6 +24,7 @@ class JimdoOrderParser:
                 "email": "Email pour facturation",
                 "declinaison": "Déclinaison",
                 "firm": "Entreprise pour facturation",
+                "n_number": "N°",
             },
             "type2": {
                 "article": "Page",
@@ -33,6 +34,7 @@ class JimdoOrderParser:
                 "email": "Message",
                 "declinaison": "Company",
                 "firm": "E-mail",
+                "n_number": None,  # Not available in Type2
             },
         }
 
@@ -245,6 +247,14 @@ class JimdoOrderParser:
                 # Type2: combined name in single column
                 name = str(row.get("last_name", "")).strip()
 
+            # Set achat value based on file type
+            if file_type == "type1":
+                # Type1: use the N° column value
+                achat_value = str(row.get("n_number", "")).strip() or None
+            else:
+                # Type2: use 'T'
+                achat_value = "T"
+
             rows.append(
                 {
                     "id": None,
@@ -255,7 +265,7 @@ class JimdoOrderParser:
                     "name": name,
                     "email": str(row.get("email", "")).strip(),
                     "num_tickets": num_tickets,
-                    "achat": None,
+                    "achat": achat_value,
                 }
             )
 
