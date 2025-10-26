@@ -163,109 +163,95 @@ class GmailEmailClient:
             <title>Tombola Tickets - Kermesse Francophone</title>
             <style>
                 body {{
-                    font-family: 'Georgia', 'Times New Roman', serif;
+                    font-family: 'Geneva', sans-serif;
                     line-height: 1.6;
-                    color: #2c3e50;
+                    color: #4F7FFF;
                     max-width: 800px;
                     margin: 0 auto;
                     padding: 20px;
                     background-color: #ffffff;
                 }}
                 .header {{
+                    font-family: 'Geneva', sans-serif;
                     text-align: center;
+                    color: #4F7FFF;
                     margin-bottom: 30px;
                 }}
                 .greeting {{
-                    font-size: 24px;
-                    color: #0c5494;
-                    margin-bottom: 20px;
-                    font-style: italic;
+                    font-size: 18px;
+                    color: #4F7FFF;
                 }}
                 .greeting-en {{
-                    font-size: 20px;
-                    color: #0c5494;
+                    font-size: 18px;
                     font-style: italic;
-                    margin-bottom: 20px;
+                    color: #4F7FFF;
                 }}
                 .thank-you {{
+                    font-family: 'Geneva', sans-serif;
                     font-size: 18px;
-                    color: #0c5494;
+                    text-align: center;
+                    color: #4F7FFF;
+                }}
+                .thank-you-en {{
+                    font-family: 'Geneva', sans-serif;
+                    font-size: 17px;
+                    font-style: italic;
                     margin-bottom: 25px;
                     text-align: center;
+                    color: #4F7FFF;
                 }}
                 .highlight {{
+                    font-family: 'Geneva', sans-serif;
                     font-size: 18px;
-                    color: #fc0afb;
-                    font-style: italic;
+                    color: #FF4012;
                     text-align: center;
-                    margin-bottom: 20px;
                 }}
                 .results {{
-                    font-size: 20px;
-                    color: #fc0afb;
-                    font-weight: bold;
-                    font-style: italic;
+                    font-family: 'Geneva', sans-serif;
+                    font-size: 18px;
+                    color: #FF4012;
                     text-align: center;
-                    margin-bottom: 25px;
+                    margin-bottom: 10px;
                 }}
                 .ticket-section {{
                     text-align: center;
-                    margin: 30px 0;
-                    padding: 20px;
-                    background-color: #f8f9fa;
-                    border-radius: 10px;
+                    margin: 15px 0;
                 }}
                 .ticket-numbers {{
-                    font-size: 28px;
-                    color: #fc0afb;
-                    font-weight: bold;
+                    font-size: 24px;
+                    color: #FF4012;
                     background-color: #fff3cd;
-                    padding: 15px;
-                    border-radius: 8px;
+                    border-radius: 5px;
                     display: inline-block;
+                    text-align: center;
                     margin: 15px 0;
                 }}
                 .project-link {{
                     text-align: center;
-                    margin: 25px 0;
                 }}
                 .project-link a {{
-                    color: #0c5494;
+                    font-family: 'Geneva', sans-serif;
+                    color: #4F7FDA;
                     text-decoration: underline;
-                    font-size: 16px;
-                    font-style: italic;
-                    font-weight: bold;
+                    font-size: 17px;
                 }}
                 .project-link-en {{
                     text-align: center;
-                    margin: 15px 0;
+                    font-style: italic;
+                    margin-bottom: 10px;
                 }}
                 .project-link-en a {{
-                    color: #0c5494;
+                    font-family: 'Geneva', sans-serif;
+                    color: #4F7FDA;
                     text-decoration: underline;
-                    font-size: 16px;
-                    font-style: italic;
-                    font-weight: bold;
-                }}
-                .project-list {{
-                    margin: 15px 0;
-                    padding-left: 20px;
-                }}
-                .project-item {{
-                    margin: 8px 0;
-                    display: flex;
-                    justify-content: space-between;
-                }}
-                .project-cost {{
-                    font-weight: bold;
-                    color: #fc0afb;
+                    font-size: 17px;
                 }}
                 .date {{
-                    font-size: 30px;
-                    color: #fc0afb;
+                    font-size: 32px;
+                    color: #125AFF;
                     font-weight: bold;
                     text-align: center;
-                    margin-bottom: 15px;
+                    margin-bottom: 10px;
                 }}
             </style>
         </head
@@ -278,95 +264,96 @@ class GmailEmailClient:
             <div class="thank-you">
                 Un immense merci de contribuer à la Kermesse par l'achat de tickets de tombola.
             </div>
+            <div class="thank-you-en">
+                Thank you for your support through your purchase of raffle tickets.
+            </div>
 
             <div class="highlight">
-                Pour mémoire, la Kermesse est l'événement le plus important de la communauté francophone aux Pays-Bas.
+                Avec cette contribution, vous participez à l’événement le plus important de la communauté francophone aux Pays-Bas.
+            </div>
+
+            <div class="highlight">
+                Bénéfice Kermesse 2024 : 30 600 euros !
+            </div>
+
+            <div class="highlight">
+                Ce résultat a été possible en partie grâce au grand succès de la Tombola :
             </div>
 
             <div class="results">
-                Résultat 2023 : 36 300 euros !
-            </div>
-
-            <div class="thank-you">
-                Cela a été possible, en particulier grâce au succès de la Tombola, et donc à vos contributions.
-            </div>
-
-            <div class="results">
-                En 2023, 987 tickets vendus !<br>
-                Soit 11 844 euros collectés.
+                En 2024, 1 243 tickets vendus, soit 14 916 euros collectés.
             </div>
 
             <div class="project-link">
                 <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
-                    Consulter les projets financés avec la Kermesse 2023
+                    Consulter les projets financés avec la Kermesse 2024
                 </a>
             </div>
 
             <div class="project-link-en">
                 <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
-                    See the projects we have supported with the Kermesse 2023
+                    See the projects we have supported with the Kermesse 2024
                 </a>
             </div>
 
-            <div class="ticket-section">
-                <div style="color: #0c5494; font-size: 16px; margin-bottom: 15px;">
-                    Vos numéros de tickets sont les suivants :<br>
-                    <span style="font-style: italic;">Your ticket numbers are as follows :</span>
-                </div>
-                <div class="ticket-numbers">
-                    {"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
-                </div>
+            <div class="thank-you">
+                Vos numéros de tickets 2025 sont les suivants :
+            </div>
+            <div class="thank-you-en" style="margin-bottom: 10px;">
+                Your 2025 ticket numbers are as follows :
             </div>
 
-            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 700px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px;">
+                <div class="ticket-section">
+                    <div class="ticket-numbers">
+                        {"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
+                    </div>
+                </div>
+
+            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 1000px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px;">
 
             <div class="thank-you">    
-                Nous vous donnons rendez-vous le 24 novembre 
-                pour le tirage au sort et l’annonce des résultats !
+                Nous vous donnons rendez-vous le 29 novembre 
             </div>
-            
-            <div class="highlight">    
-                Bonne chance !
-            </div>
-
             <div class="thank-you">    
-                Chère amie / cher ami de la Kermesse,
-                Nous serons également très heureux de vous accueillir :
+                à partir de 12:00, au lycée français, 
+            </div>
+            <div class="thank-you" style="margin-bottom: 20px;">    
+                pour la 57ème édition de la kermesse francophone
             </div>
 
-            <div class="date">    
-                le 23 novembre, à partir de 12:00, au lycée français, 
-            </div>
-
-            <div class="project-link">
-                <a href="https://www.kermessefrancophone.nl/venez-%C3%A0-la-kermesse-1/le-programme/" target="_blank">
-                    pour une journée de retrouvailles et de festivités :
+            <div class="project-link" style="margin-bottom: 20px;">
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                    Consulter le programme
                 </a>
             </div>
 
             <div class="highlight">   
-                Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand catalan, malgache
+                Buffet français, cidre, champagne, huîtres, café gourmand,
             </div>
-
+            <div class="highlight">   
+                Stand et bières belges, Stands basque et camerounais
+            </div>
             <div class="highlight">   
                 Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
             </div>
-
             <div class="highlight">   
-                Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants
+                Dictée des adultes de Mr Ballet, Concours de pesée de jambon !
+            </div>
+            <div class="highlight" style="margin-bottom: 20px;"> 
+                Concerts de musique live, animation sportive, garderie, jeux enfants
             </div>
 
             <div class="date">    
-                TOGETHER, we can do it !
+                Together we can do it !
             </div>
-
-            <img src="cid:kermesse_enfants" alt="Kermesse Enfants" style="max-width: 1000px; height: auto; display: block; margin: 0 auto;">
             
             <img src="cid:kermesse_logo" alt="Kermesse Logo" style="max-width: 700px; height: auto; display: block; margin: 0 auto;">
 
-            <div style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 12px;">
-                Ceci est un email {"de production" if self.is_prod else "de test (redirigé)"}.
-            </div>
+        {'' if self.is_prod else '''
+                    <div style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 12px;">
+                        Ceci est un email de test (redirigé).
+                    </div>
+        '''}
         </body>
         </html>
         """
@@ -416,11 +403,6 @@ Ceci est un email {"de production" if self.is_prod else "de test (redirigé)"}.
                 "path": "img/kermesse_evenements.png",
                 "cid": "kermesse_evenements",
                 "filename": "kermesse_evenements.png",
-            },
-            {
-                "path": "img/kermesse_enfants.png",
-                "cid": "kermesse_enfants",
-                "filename": "kermesse_enfants.png",
             },
             {
                 "path": "img/kermesse_logo.png",
