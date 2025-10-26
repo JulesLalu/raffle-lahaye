@@ -18,6 +18,7 @@ load_dotenv()
 DEFAULT_ARTICLE_TYPE1 = "Billet de tombola / Raffle ticket 2024"
 DEFAULT_ARTICLE_TYPE2 = "Tikkie tombola only!"
 
+STARTING_TICKET_ID = int(os.getenv("STARTING_TICKET_ID", "1"))
 
 def create_firm_statistics(orders: list) -> dict:
     """Create firm statistics showing total tickets distributed per firm."""
@@ -419,7 +420,7 @@ def main() -> None:
                     with PostgresClient() as db:
                         max_id, max_span = db.get_max_id_and_span()
                         if max_id is None:
-                            start_id = 1
+                            start_id = STARTING_TICKET_ID
                         else:
                             start_id = max_id + (max_span or 0)
 
