@@ -20,18 +20,19 @@ DEFAULT_ARTICLE_TYPE2 = "Tikkie tombola only!"
 
 STARTING_TICKET_ID = int(os.getenv("STARTING_TICKET_ID", "1"))
 
+
 def create_firm_statistics(orders: list) -> dict:
     """Create firm statistics showing total tickets distributed per firm."""
     firm_stats = {}
-    
+
     for order in orders:
         firm = order.get("firm", "").strip()
         if not firm:
             firm = "No Firm"  # Handle empty firm names
-        
+
         num_tickets = int(order.get("num_tickets", 0))
         firm_stats[firm] = firm_stats.get(firm, 0) + num_tickets
-    
+
     return firm_stats
 
 
@@ -155,7 +156,7 @@ def main() -> None:
                 else:
                     # Create firm statistics
                     firm_stats = create_firm_statistics(orders)
-                    
+
                     # Expand orders into per-ticket rows
                     records = []
                     for order in orders:
@@ -171,10 +172,10 @@ def main() -> None:
                                 "firm": order.get("firm") or "",
                             }
                             records.append(record)
-                    
+
                     # Create the main DataFrame
                     export_df = pd.DataFrame(records)
-                    
+
                     # Add firm statistics as the first row
                     if firm_stats:
                         # Create a summary row with firm statistics
@@ -186,28 +187,31 @@ def main() -> None:
                             "email": "",
                             "firm": "",
                         }
-                        
+
                         # Add firm statistics to the summary row
                         for firm_name, ticket_count in firm_stats.items():
                             summary_row[firm_name] = ticket_count
-                        
+
                         # Create a DataFrame for the summary row with all columns
                         summary_df = pd.DataFrame([summary_row])
-                        
+
                         # Ensure the summary row has all the same columns as the main DataFrame
                         for col in export_df.columns:
                             if col not in summary_df.columns:
                                 summary_df[col] = ""
-                        
+
                         # Add firm statistics columns to the main DataFrame (filled with empty strings)
                         for firm_name in firm_stats.keys():
                             if firm_name not in export_df.columns:
                                 export_df[firm_name] = ""
-                        
+
                         # Concatenate summary row at the top
-                        export_df = pd.concat([summary_df, export_df], ignore_index=True)
-                    
+                        export_df = pd.concat(
+                            [summary_df, export_df], ignore_index=True
+                        )
+
                     import io as _io
+
                     buf = _io.BytesIO()
                     export_df.to_excel(buf, index=False)
                     buf.seek(0)

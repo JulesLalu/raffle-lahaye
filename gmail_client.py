@@ -306,7 +306,12 @@ class GmailEmailClient:
 
                 <div class="ticket-section">
                     <div class="ticket-numbers">
-                        {"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
+                        {
+            "-".join(
+                str(ticket_id)
+                for ticket_id in range(ticket_start_id, ticket_end_id + 1)
+            )
+        }
                     </div>
                 </div>
 
@@ -350,11 +355,15 @@ class GmailEmailClient:
             
             <img src="cid:kermesse_logo" alt="Kermesse Logo" style="max-width: 700px; height: auto; display: block; margin: 0 auto;">
 
-        {'' if self.is_prod else '''
+        {
+            ""
+            if self.is_prod
+            else '''
                     <div style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 12px;">
                         Ceci est un email de test (redirigé).
                     </div>
-        '''}
+        '''
+        }
         </body>
         </html>
         """
