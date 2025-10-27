@@ -11,6 +11,7 @@ from sql_client import PostgresClient
 from gmail_client import GmailEmailClient
 from google_auth import init_google_auth
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -218,7 +219,7 @@ def main() -> None:
                     st.download_button(
                         label="Download .xlsx",
                         data=buf.getvalue(),
-                        file_name="tickets_export.xlsx",
+                        file_name=f"tickets_export_{datetime.now().strftime('%d-%m-%Y')}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     )
             except Exception as e:
