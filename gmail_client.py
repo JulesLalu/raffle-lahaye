@@ -309,7 +309,7 @@ class GmailEmailClient:
                     </div>
                 </div>
 
-            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 1000px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px;">
+            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 1000px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px; border: 2px solid #4F7FFF;">
 
             <div class="thank-you">    
                 Nous vous donnons rendez-vous le 29 novembre 
