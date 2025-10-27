@@ -285,13 +285,13 @@ class GmailEmailClient:
             </div>
 
             <div class="project-link">
-                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/" target="_blank">
                     Consulter les projets financés avec la Kermesse 2024
                 </a>
             </div>
 
             <div class="project-link-en">
-                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/" target="_blank">
                     See the projects we have supported with the Kermesse 2024
                 </a>
             </div>
@@ -322,7 +322,7 @@ class GmailEmailClient:
             </div>
 
             <div class="project-link" style="margin-bottom: 20px;">
-                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2024-28-160-euros/" target="_blank">
+                <a href="https://www.kermessefrancophone.nl/" target="_blank">
                     Consulter le programme
                 </a>
             </div>
