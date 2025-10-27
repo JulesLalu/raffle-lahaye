@@ -218,13 +218,14 @@ class GmailEmailClient:
                     margin: 15px 0;
                 }}
                 .ticket-numbers {{
-                    font-size: 24px;
+                    font-size: 30px;
                     color: #FF4012;
                     background-color: #fff3cd;
                     border-radius: 5px;
                     display: inline-block;
                     text-align: center;
                     margin: 15px 0;
+                    font-weight: bold;
                 }}
                 .project-link {{
                     text-align: center;
