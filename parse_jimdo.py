@@ -105,33 +105,33 @@ class JimdoOrderParser:
                 break
         # If we found a header row, use it
         if header_row_index is not None:
-            # Skip all rows before the header
+            # Skip all rows before the header, but keep the header row itself
             if isinstance(file_input, str):
                 # File path - detect by extension
                 file_extension = file_input.lower().split(".")[-1]
                 if file_extension == "xlsx":
                     df = pd.read_excel(
-                        file_input, skiprows=list(range(header_row_index + 1))
+                        file_input, skiprows=list(range(header_row_index))
                     )
                 else:  # csv
                     df = pd.read_csv(
                         file_input,
-                        skiprows=list(range(header_row_index + 1)),
-                        header=None,
+                        skiprows=list(range(header_row_index)),
+                        header=0,  # Use first row as header
                     )
             else:
                 # BytesIO object - try Excel first, then CSV
                 file_input.seek(0)
                 try:
                     df = pd.read_excel(
-                        file_input, skiprows=list(range(header_row_index + 1))
+                        file_input, skiprows=list(range(header_row_index))
                     )
                 except Exception:
                     file_input.seek(0)
                     df = pd.read_csv(
                         file_input,
-                        skiprows=list(range(header_row_index + 1)),
-                        header=None,
+                        skiprows=list(range(header_row_index)),
+                        header=0,  # Use first row as header
                     )
         else:
             # Fallback: assume header is on first row
@@ -148,50 +148,27 @@ class JimdoOrderParser:
         """Create a unified DataFrame with standardized column names."""
         mapping = self.column_mappings[file_type]
 
-        # First, set the proper column names based on file type
-        if file_type == "type1":
-            # Type1 columns - use the actual column names from the Excel file
-            df.columns = [
-                "N°",
-                "N° d'article",
-                "Date de commande",
-                "Mode de paiement",
-                "Article",
-                "Déclinaison",
-                "Prix à l'unité net",
-                "Prix net",
-                "Prix brut",
-                "Devise",
-                "Date d'envoi",
-                "Entreprise pour facturation",
-                "Titre pour facturation",
-                "Nom pour facturation",
-                "Prénom pour facturation",
-                "Email pour facturation",
-                "Remarque (facture)",
-                "N° TVA Intracommunautaire",
-                "Date de naissance",
-                "Numéro client",
-                "Entreprise pour livraison",
-                "Titre pour livraison",
-                "Nom pour livraison",
-                "Deuxième prénom pour livraison",
-                "Prénom pour livraison",
-                "Complément d'adresse (livraison)",
-                "Rue pour livraison",
-                "Code postal pour livraison",
-                "Ville pour livraison",
-                "Région/province pour livraison",
-                "Pays pour livraison",
-                "Téléphone pour livraison",
-                "E-Mail pour livraison",
-                "Remarque (livraison)",
-            ] + [f"Extra_{i}" for i in range(len(df.columns) - 34)]
-        elif file_type == "type2":
-            # Type2 columns
-            df.columns = ["Date", "Page", "Nom", "E-mail", "Message", "Company"] + [
-                f"Extra_{i}" for i in range(len(df.columns) - 6)
-            ]
+        # Get actual column names from the dataframe (case-insensitive matching)
+        # and map them to standard fields
+        df_cols = df.columns.tolist()
+        df_cols_lower = [col.lower() for col in df_cols]
+
+        # Find column mappings by searching in actual column names
+        actual_mapping = {}
+        for field, expected_col in mapping.items():
+            if expected_col is None:
+                actual_mapping[field] = None
+            else:
+                # Try to find the column (case-insensitive)
+                for idx, col_lower in enumerate(df_cols_lower):
+                    if expected_col == col_lower:
+                        actual_mapping[field] = df_cols[idx]
+                        break
+                else:
+                    # If not found in the search, try exact match
+                    actual_mapping[field] = (
+                        expected_col if expected_col in df_cols else None
+                    )
 
         # Create unified DataFrame with standardized columns
         unified_data = []
@@ -199,8 +176,8 @@ class JimdoOrderParser:
         for _, row in df.iterrows():
             unified_row = {}
 
-            # Map each field using the appropriate column mapping
-            for field, source_col in mapping.items():
+            # Map each field using the actual column names found in the dataframe
+            for field, source_col in actual_mapping.items():
                 if source_col is not None and source_col in df.columns:
                     unified_row[field] = row[source_col]
                 else:
