@@ -377,32 +377,27 @@ Bonjour {name},
 
 Un immense merci de contribuer à la Kermesse par l'achat de tickets de tombola.
 
-Pour mémoire, la Kermesse est l'événement le plus important de la communauté francophone aux Pays-Bas.
+Avec cette contribution, vous participez à l’événement le plus important de la communauté francophone aux Pays-Bas.
 
-Résultat 2023 : 36 300 euros !
+Bénéfice Kermesse 2024 : 30 600 euros !
 
-Cela a été possible, en particulier grâce au succès de la Tombola, et donc à vos contributions.
+Ce résultat a été possible en partie grâce au grand succès de la Tombola :
 
-En 2023, 987 tickets vendus !
-Soit 11 844 euros collectés.
+En 2024, 1 243 tickets vendus, soit 14 916 euros collectés.
 
-Consulter les projets financés avec la Kermesse 2023 :
-https://kermesse-francophone.nl/projects-2023
+Consulter les projets financés avec la Kermesse 2024: 
+https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/
 
-Vos numéros de tickets sont les suivants :
+Vos numéros de tickets 2025 sont les suivants :
 {"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
 
-Nous vous donnons rendez-vous le 24 novembre pour le tirage au sort et l’annonce des résultats !
-Bonne chance !
+Nous vous donnons rendez-vous le 29 novembre à partir de 12:00, au lycée français, pour la 57ème édition de la kermesse francophone.
 
-Chère amie / cher ami de la Kermesse, Nous serons également très heureux de vous accueillir le 23 novembre, à partir de 12:00, au lycée français, pour une journée de retrouvailles et de festivités :
-Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand catalan, malgache
+Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand basque et camerounais.
 Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
-Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants
+Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants.
 
 TOGETHER, we can do it !
-
-Ceci est un email {"de production" if self.is_prod else "de test (redirigé)"}.
         """
 
     def _attach_images(self, html_part) -> None:
