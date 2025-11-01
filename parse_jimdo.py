@@ -29,11 +29,11 @@ class JimdoOrderParser:
             "type2": {
                 "article": "Page",
                 "date": "Date",
-                "last_name": "Nom",
+                "last_name": "E-mail",
                 "first_name": None,  # Combined with last_name in "Nom"
                 "email": "Message",
-                "declinaison": "Company",
-                "firm": "E-mail",
+                "declinaison": "Nom",
+                "firm": "Company",
                 "n_number": None,  # Not available in Type2
             },
         }
