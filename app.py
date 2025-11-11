@@ -28,9 +28,13 @@ def create_firm_statistics(orders: list) -> dict:
 
     for order in orders:
         firm = order.get("firm", "").strip() if order.get("firm") else None
-        if not firm or firm == "nan":
-            firm = "Other"  # Handle empty firm names
-
+        match firm:
+            case "nan" | "" | None:
+                firm = "Other"
+            case "OTAN":
+                firm = "NATO"
+            case _:
+                firm = firm
         num_tickets = int(order.get("num_tickets", 0))
         firm_stats[firm] = firm_stats.get(firm, 0) + num_tickets
 
