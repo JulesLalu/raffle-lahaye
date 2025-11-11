@@ -23,7 +23,7 @@ This project has been migrated from SQLite to PostgreSQL to support cloud deploy
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.13+
 - PostgreSQL database (local or hosted)
 - Gmail API credentials (for email functionality)
 - Required Python packages (see `pyproject.toml`)
