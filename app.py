@@ -110,7 +110,7 @@ def main() -> None:
 
         min_date = st.date_input(
             "Import orders from:",
-            value=pd.to_datetime("2025-09-01").date(),
+            value=pd.to_datetime("2026-09-01").date(),
             format="DD/MM/YYYY",
             help="Orders before this date will be excluded from import",
         )
@@ -239,7 +239,7 @@ def main() -> None:
             with col1:
                 order_date = st.date_input(
                     "Order Date",
-                    value=pd.to_datetime("2025-09-01").date(),
+                    value=pd.to_datetime("2026-09-01").date(),
                     format="DD/MM/YYYY",
                     key="dialog_date",
                 )

@@ -21,6 +21,14 @@ GMAIL_SCOPES = [
 ]
 
 
+def format_ticket_number_sequence(ticket_start_id: int, ticket_end_id: int) -> str:
+    """Hyphen-separated ticket IDs with zero-padding (e.g. 856-857-858)."""
+    return "-".join(
+        f"{ticket_id:03d}"
+        for ticket_id in range(ticket_start_id, ticket_end_id + 1)
+    )
+
+
 class GmailEmailClient:
     """Send emails using the Gmail API with OAuth credentials.
 
@@ -106,7 +114,7 @@ class GmailEmailClient:
         to_email = self._compute_recipient(db_email)
         ticket_end_id = ticket_start_id + num_tickets - 1
 
-        subject = "Vos billets de tombola / Your raffle tickets"
+        subject = "🍀 Vos billets de tombola / Your raffle tickets 🍀"
 
         # Create HTML email body with professional styling
         html_body = self._create_html_email_body(
@@ -218,14 +226,20 @@ class GmailEmailClient:
                     margin: 15px 0;
                 }}
                 .ticket-numbers {{
-                    font-size: 30px;
-                    color: #FF4012;
-                    background-color: #fff3cd;
-                    border-radius: 5px;
                     display: inline-block;
-                    text-align: center;
+                    background-color: #ffdf7e;
+                    border-radius: 16px;
+                    padding: 14px 22px;
                     margin: 15px 0;
+                    text-align: center;
+                    line-height: 1.2;
+                }}
+                .ticket-list {{
+                    font-size: 28px;
+                    color: #FF4012;
                     font-weight: bold;
+                    vertical-align: middle;
+                    padding: 0 10px;
                 }}
                 .project-link {{
                     text-align: center;
@@ -274,7 +288,7 @@ class GmailEmailClient:
             </div>
 
             <div class="highlight">
-                Bénéfice Kermesse 2024 : 30 600 euros !
+                Kermesse 2025 : 40 925 euros distribués à 18 projets  !
             </div>
 
             <div class="highlight">
@@ -282,49 +296,44 @@ class GmailEmailClient:
             </div>
 
             <div class="results">
-                En 2024, 1 243 tickets vendus, soit 14 916 euros collectés.
+                En 2025, 1 398 tickets vendus, soit 16 767 euros collectés.
             </div>
 
             <div class="project-link">
-                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/" target="_blank">
-                    Consulter les projets financés avec la Kermesse 2024
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2026-40-925-euros/" target="_blank">
+                    Consulter les projets financés avec la Kermesse 2025
                 </a>
             </div>
 
             <div class="project-link-en">
-                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/" target="_blank">
-                    See the projects we have supported with the Kermesse 2024
+                <a href="https://www.kermessefrancophone.nl/les-projets/projets-2026-40-925-euros/" target="_blank">
+                    See the projects we have supported with the Kermesse 2025
                 </a>
             </div>
 
             <div class="thank-you">
-                Vos numéros de tickets 2025 sont les suivants :
+                Vos numéros de tickets 2026 sont les suivants :
             </div>
             <div class="thank-you-en" style="margin-bottom: 10px;">
-                Your 2025 ticket numbers are as follows :
+                Your 2026 ticket numbers are as follows :
             </div>
 
                 <div class="ticket-section">
                     <div class="ticket-numbers">
-                        {
-            "-".join(
-                str(ticket_id)
-                for ticket_id in range(ticket_start_id, ticket_end_id + 1)
-            )
-        }
+                        <span class="ticket-list">🍀 {format_ticket_number_sequence(ticket_start_id, ticket_end_id)} 🍀</span>
                     </div>
                 </div>
 
-            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 1000px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px; border: 2px solid #4F7FFF;">
+            <img src="cid:kermesse_evenements" alt="Kermesse Francophone de La Haye" style="max-width: 1000px; height: auto; display: block; margin: 0 auto; margin-bottom: 15px;">
 
             <div class="thank-you">    
-                Nous vous donnons rendez-vous le 29 novembre 
+                Nous vous donnons rendez-vous le 28 novembre 
             </div>
             <div class="thank-you">    
                 à partir de 12:00, au lycée français, 
             </div>
             <div class="thank-you" style="margin-bottom: 20px;">    
-                pour la 57ème édition de la kermesse francophone
+                pour la 58ème édition de la kermesse francophone
             </div>
 
             <div class="project-link" style="margin-bottom: 20px;">
@@ -334,16 +343,16 @@ class GmailEmailClient:
             </div>
 
             <div class="highlight">   
-                Buffet français, cidre, champagne, huîtres, café gourmand,
+                Buffet français, champagne, huîtres, café gourmand,
             </div>
             <div class="highlight">   
-                Stand et bières belges, Stands basque et camerounais
+                Stand et bières belges, Stands vietnamiens et camerounais
             </div>
             <div class="highlight">   
                 Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
             </div>
             <div class="highlight">   
-                Dictée des adultes de Mr Ballet, Concours de pesée de jambon !
+                Dictée des Parents de Mr Ballet, Concours de pesée de jambon !
             </div>
             <div class="highlight" style="margin-bottom: 20px;"> 
                 Concerts de musique live, animation sportive, garderie, jeux enfants
@@ -379,23 +388,23 @@ Un immense merci de contribuer à la Kermesse par l'achat de tickets de tombola.
 
 Avec cette contribution, vous participez à l’événement le plus important de la communauté francophone aux Pays-Bas.
 
-Bénéfice Kermesse 2024 : 30 600 euros !
+Kermesse 2025 : 40 925 euros distribués à 18 projets  !
 
 Ce résultat a été possible en partie grâce au grand succès de la Tombola :
 
-En 2024, 1 243 tickets vendus, soit 14 916 euros collectés.
+En 2025, 1 398 tickets vendus, soit 16 767 euros collectés.
 
-Consulter les projets financés avec la Kermesse 2024: 
-https://www.kermessefrancophone.nl/les-projets/projets-2025-32-050-euros-1/
+Consulter les projets financés avec la Kermesse 2025: 
+https://www.kermessefrancophone.nl/les-projets/projets-2026-40-925-euros/
 
-Vos numéros de tickets 2025 sont les suivants :
-{"-".join(str(ticket_id) for ticket_id in range(ticket_start_id, ticket_end_id + 1))}
+Vos numéros de tickets 2026 sont les suivants :
+🍀 {format_ticket_number_sequence(ticket_start_id, ticket_end_id)} 🍀
 
-Nous vous donnons rendez-vous le 29 novembre à partir de 12:00, au lycée français, pour la 57ème édition de la kermesse francophone.
+Nous vous donnons rendez-vous le 28 novembre à partir de 12:00, au lycée français, pour la 58ème édition de la kermesse francophone.
 
-Buffet français, cidre, champagne, huîtres, café gourmand, Stand et bières belges, Stand basque et camerounais.
+Buffet français, champagne, huîtres, café gourmand, Stand et bières belges, Stand vietnamiens et camerounais.
 Livres adultes, livres et jouets enfants, Articles de sport et vêtements de ski,
-Dictée des adultes de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants.
+Dictée des Parents de Mr Ballet, Concours de pesée de jambon !, Concerts de musique live, animation sportive, garderie, jeux enfants.
 
 TOGETHER, we can do it !
         """
